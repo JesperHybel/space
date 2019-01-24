@@ -1,3 +1,4 @@
+# https://rstudio-pubs-static.s3.amazonaws.com/12696_9fd49fb7055c40ff9b3a3ea740e13ab3.html
 library(osmar)
 optionsource <- osmsource_api()
 # For some reason the url is wrong in osmsource_api() so always correct it ...

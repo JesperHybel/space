@@ -12,3 +12,13 @@ out$nodes$attrs[,c("lon","lat")]
 filepath<-"C://Users//jeshyb//Desktop//R_spatial//osm_files//klosterstraede_bb.osm"
 optionsource <- osmsource_osmosis(file=filepath)
 out2 <- get_osm(way(1794683),source=optionsource,full=TRUE)
+
+# This does not work, I thin way-request is not supported only bounded box
+filepath<-"C://Users//jeshyb//Desktop//R_spatial//osm_files//muenchen.osm"
+optionsource <- osmsource_osmosis(file=filepath)
+muc_bbox <- center_bbox(11.575278, 48.137222, 3000, 3000)
+out2 <- get_osm(muc_bbox,source=optionsource)
+# This works .. however
+
+# This does work however I have to manually unzip to osm-file instead of doing as in the
+# vignette where system(gzip -d ...) is used to unzip from within R

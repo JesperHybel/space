@@ -1,0 +1,23 @@
+# How to use nominatim with JSON to look up street
+# Example based on
+# https://www.r-bloggers.com/search-and-draw-cities-on-a-map-using-openstreetmap-and-r/
+# https://wiki.openstreetmap.org/wiki/Nominatim
+
+
+library(RJSONIO)
+nameRoad <- "Klosterstræde"
+nameCity <- "København"
+codeCountry <- "DK"
+cleanRoadName <- gsub(' ', '%20', nameRoad)
+cleanCityName <- gsub(' ', '%20', nameCity)
+
+  url = paste(
+    "http://nominatim.openstreetmap.org/search?street="
+    , cleanRoadName
+    , "&countrycodes="
+    , codeCountry
+    , "&city="
+    , cleanCityName
+    , "&limit=9&format=json"
+    , sep="")
+resOSM = fromJSON(url,encoding="UTF-8")

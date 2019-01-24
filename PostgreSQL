@@ -1,2 +1,15 @@
 # https://www.r-spatial.org/2017/07/14/large_scale_osm_in_r
 # Describes how to set up PostgreSQL for R
+# Java has to be installed and
+# thtps://wiki.openstreetmap.org/wiki/Osmosis/Quick_Install_(Windows)
+# provides instructions for how to install osmosis add to path and alter osmosis.bat file
+# so osmosis knows where java is however
+# I had to change
+
+IF "%JAVACMD%"=="" set JAVACMD="C:\Program Files (x86)\Java\jre7\bin\java" 
+
+# to
+
+IF "%JAVACMD%"=="" set JAVACMD=C:\Program Files (x86)\Java\jre7\bin\java
+
+# leaving out quotation ... 

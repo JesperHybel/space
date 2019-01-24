@@ -7,6 +7,7 @@ out <- get_osm(way(1794683),source=optionsource,full=TRUE)
 out$nodes$attrs[,c("lon","lat")]
 
 # Instead of working online we can work using a local file
+# debug(osmar:::get_osm_data.osmosis)
 filepath<-"C://Users//jeshyb//Desktop//R_spatial//osm_files//klosterstraede_bb.osm"
 optionsource <- osmsource_osmosis(file=filepath)
 out2 <- get_osm(way(1794683),source=optionsource,full=TRUE)

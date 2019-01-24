@@ -2,7 +2,7 @@
 # Example based on
 # https://www.r-bloggers.com/search-and-draw-cities-on-a-map-using-openstreetmap-and-r/
 # https://wiki.openstreetmap.org/wiki/Nominatim
-
+# https://nominatim.openstreetmap.org/details.php?place_id=69027563
 
 library(RJSONIO)
 nameRoad <- "Klosterstræde"

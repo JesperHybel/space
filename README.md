@@ -1,2 +1,2 @@
 # Resources for spatial computation in R
-The package sp and sf are very important.
+The package \texttt{sp} and sf are very important.

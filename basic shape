@@ -1,0 +1,47 @@
+
+
+x <- c("ggmap", "rgdal", "rgeos", "maptools", "dplyr", "tidyr", "tmap")
+# install.packages(x) # warning: uncommenting this may take a number of minutes
+lapply(x, library, character.only = TRUE) 
+
+# Load a shapefile
+setwd("C:\\Users\\jeshyb\\Desktop\\R_spatial\\osm_files\\london")
+lnd <- readOGR(dsn = ".", layer = "london_sport")
+
+# Inspect the S4 object
+slotNames(lnd)
+getSlots("SpatialPolygonsDataFrame")
+methods(class = "SpatialPolygonsDataFrame")
+
+# make basic plots
+plot(lnd,col="grey")
+
+# plot a subsection of polygons
+sel <- lnd$Partic_Per > 20 & lnd$Partic_Per < 25
+plot(lnd[sel, ]) 
+
+# Add something to a plot
+plot(lnd, col = "lightgrey") 
+sel <- lnd$Partic_Per > 25
+plot(lnd[ sel, ], col = "turquoise", add = TRUE) 
+
+# This does not work ... how to take the spatial reference key into consideration?
+plot(coordinates(lnd),col="red",add=TRUE)
+
+
+#
+lat <- coordinates(gCentroid(lnd))[[1]]
+lng <- coordinates(gCentroid(lnd))[[2]]
+
+east <- sapply(coordinates(lnd)[,1], function(x) x > lat)
+north <- sapply(coordinates(lnd)[,2], function(x) x > lng)
+
+# test if the coordinate is east and north of the centre
+lnd@data$quadrant[east & north] <- "northeast"
+lnd@data$quadrant[!east & north] <- "northwest"
+lnd@data$quadrant[east & !north] <- "southeast"
+lnd@data$quadrant[!east & !north] <- "southwest"
+
+plot(lnd,col=c("red","green","grey","pink")[as.numeric(as.factor(lnd@data$quadrant))])
+
+

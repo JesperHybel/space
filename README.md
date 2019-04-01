@@ -15,3 +15,11 @@ The sp package has an easily accesible introductory vignette called sp: classes 
 can be downloaded from CRAN at
 https://cran.r-project.org/web/packages/sp/index.html
 
+## SF package
+The sf package talks about features having attributes as well as geometry (locations in space). The introductory vignette posted at https://cran.r-project.org/web/packages/sf/vignettes/sf1.html provides a table of the available classes and methods. The methods are available in R by the command methods(class = "sf")
+
+```ruby
+require 'redcarpet'
+markdown = Redcarpet.new("Hello World!")
+puts markdown.to_html
+```

@@ -18,3 +18,36 @@ index <- which(as.numeric(a$osm_id)>1574210)
 index <- index[-length(index)]
 b <- a[index,]
 b <- b[c(-7,-8),]
+
+
+# Clean up the names
+library(stringdist)
+library(rvest)
+
+
+# Table of municipality names and dst-codes
+url <- "https://www.dst.dk/da/Statistik/dokumentation/Times/sociale-pensioner/kom"
+goo <- read_html(url)
+table <- html_nodes(goo,"table")
+mun_table <- goo %>%
+        html_nodes("table") %>%
+        .[1] %>%
+        html_table(fill = TRUE)
+
+mun_table <- mun_table[[1]]
+year <- substring(mun_table[,2],7,10)
+index <- which(as.numeric(year)>3000)
+mun_table <- mun_table[index,]
+mun_table <- mun_table[,3:4]
+names<-unlist(strsplit(b$name,split=' ', fixed=TRUE))[seq(1,195,by=2)]
+
+R <- length(b$name)
+temp <- list()
+temp$new <- rep("",R)
+for (i in 1:R)
+	{
+		m <- amatch(names[i],mun_table$Tekst,maxDist=13)
+		temp$new[i] <- mun_table$Tekst[m]
+	}
+a$name <- temp$new
+

@@ -1,0 +1,20 @@
+
+# script to get municipalities
+library(osmdata)
+library(sf)
+library(sp)
+library(tmap)
+# Build an overpass query
+m <- getbb("Denmark",featuretype="Country")
+m <- opq(bbox=m,timeout=2500)
+m <- add_osm_feature(m,key = 'admin_level', value = '7')
+# level 4 is region
+# level 10 is parish(sogn)
+# see https://wiki.openstreetmap.org/wiki/Tag:boundary%3Dadministrative
+dt_m <- osmdata_sf(m)
+
+a <- dt_m$osm_multipolygons[,c("osm_id","name")]
+index <- which(as.numeric(a$osm_id)>1574210)
+index <- index[-length(index)]
+b <- a[index,]
+b <- b[c(-7,-8),]

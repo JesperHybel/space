@@ -49,5 +49,5 @@ for (i in 1:R)
 		m <- amatch(names[i],mun_table$Tekst,maxDist=13)
 		temp$new[i] <- mun_table$Tekst[m]
 	}
-a$name <- temp$new
+b$name <- temp$new
 

@@ -4,16 +4,22 @@ library(osmdata)
 library(sf)
 library(sp)
 library(tmap)
+
 # Build an overpass query
 m <- getbb("Denmark",featuretype="Country")
 m <- opq(bbox=m,timeout=2500)
+# Add data on administrative level 7 - which is municipalities
 m <- add_osm_feature(m,key = 'admin_level', value = '7')
 # level 4 is region
 # level 10 is parish(sogn)
 # see https://wiki.openstreetmap.org/wiki/Tag:boundary%3Dadministrative
-dt_m <- osmdata_sf(m)
 
+# Make the query
+dt_m <- osmdata_sf(m)
+# Select data associated with multipolygons (municipalities are multipolygons)
 a <- dt_m$osm_multipolygons[,c("osm_id","name")]
+
+# Clean up by manually removing all non danish municipalities
 index <- which(as.numeric(a$osm_id)>1574210)
 index <- index[-length(index)]
 b <- a[index,]
@@ -23,7 +29,6 @@ b <- b[c(-7,-8),]
 # Clean up the names
 library(stringdist)
 library(rvest)
-
 
 # Table of municipality names and dst-codes
 url <- "https://www.dst.dk/da/Statistik/dokumentation/Times/sociale-pensioner/kom"

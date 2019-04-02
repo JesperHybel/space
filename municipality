@@ -56,7 +56,10 @@ for (i in 1:R)
 	}
 b$name <- temp$new
 
-# Does not plot right so solve problem with topology using code
+# Does not plot right dut to problem with topology 
+# test
+st_is_valid(b)
+# fix problem using code pointed out by user https://github.com/Nowosad
 b2 <- lwgeom::st_make_valid(b)
 
 map <- tm_shape(b2) + tm_polygons("var", midpoint = NA)

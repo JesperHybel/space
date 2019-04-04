@@ -55,6 +55,9 @@ for (i in 1:R)
 		temp$new[i] <- mun_table$Tekst[m]
 	}
 b$name <- temp$new
+set.seed(1)
+b$var <- rnorm(98)
+b <- b[, c(1, 2, 4, 3)]
 
 # Does not plot right dut to problem with topology 
 # test
@@ -66,3 +69,21 @@ map <- tm_shape(b2) + tm_polygons("var", midpoint = NA)
 map
 
 
+
+
+matchnames <- function(x,y,maxdist=10)
+	{
+
+		R <- length(x)
+		temp <- list()
+		temp$old <- x
+		temp$new <- rep("",R)
+		temp$n <- rep(NA,R)
+		for (i in 1:R)
+		{
+			m <- amatch(x[i],y,maxDist=maxdist)
+			temp$new[i] <- y[m]
+			temp$n[i] <- m
+		}
+		return(temp)
+	}

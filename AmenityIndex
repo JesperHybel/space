@@ -1,0 +1,164 @@
+
+
+	# Load packages 
+	rm(list=ls())
+	setwd("C://users//jeshyb//desktop//trans//data")
+	library(plyr)
+	library(dplyr)
+	library(mapDK)
+	library(rvest)
+	library(stringdist)
+	library(sna)
+	library(osmdata)
+	library(sf)
+	library(sp)
+	library(tmap)
+	library(tmaptools)
+	
+	####################################
+	# Load transport model data and calculate 
+	# 1) Number of trips from municipality a to b ... N(a,b)
+	# 2) Cost of trip from municipality a to b ... C(a,b)
+	# 3) Time of trips from municipality a to b ... T(a,b)
+	####################################
+	
+	tr <- read.table("LoS2010.csv",sep=",",header=TRUE)
+	
+	
+	# Generate municipality variable
+	tr$mun_from <-  as.numeric(substr(tr$FromZoneID, 0, 3))
+	tr$mun_to <- as.numeric(substr(tr$ToZoneID, 0, 3))
+	tr$mun_from <- ifelse(tr$mun_from%in%c(102,103),101,tr$mun_from)
+	tr$mun_to <- ifelse(tr$mun_to%in%c(102,103),101,tr$mun_to)
+
+	# Sort data 
+	tr <- tr[order(tr$mun_from,tr$mun_to),]
+	
+	dt <- data.frame(mun_from=tr$mun_from, mun_to=tr$mun_to)
+	
+	# Constant for calculation of cost of travel
+	
+	con <- c("KrPerKM"=0.8,"VTT"=1.092,"CongT"=1.35,"FerryT"=0.75,
+	"FerryWT"=0.3,"ArrPre"=1,"WaitT"=1.5,"WalkT"=1.5,"AccEgrT"=1,"HWtime"=0.5,
+	"HWtime"=0.5,"GScar"=1.1)
+	
+	
+	CarCost <- tr$MonetaryCost10 + con["KrPerKM"] * tr$DriveLength10
+	CarTimeCost <-  tr$Freetime10 + tr$Congtime10 * con["CongT"] + 
+	tr$Ferrytime10 * con["FerryT"] + tr$FerryWaitTime10 * con["FerryWT"] + tr$ArrPreDep10 * con["ArrPre"]
+	Ccar <- CarCost + con["VTT"] * CarTimeCost
+	Tcar <- tr$Freetime10 + tr$Congtime10 + tr$Ferrytime10 + tr$FerryWaitTime10 + tr$ArrPreDep10 
+	
+	
+	PubCost <- tr$PriceCard1010 
+	PubTimeCost <- tr$InVehicleT10 + tr$WaitT10 * con["WaitT"] + tr$WalkT10 * con["WalkT"] + 
+	tr$ZoneConT10 * con["AccEgrT"] + tr$ZoneWaitT10 * con["HWtime"]
+	Cpub <- PubCost + con["VTT"] * PubTimeCost 
+	Tpub <- tr$InVehicleT10 + tr$WaitT10 + tr$WalkT10 + tr$ZoneConT10 + tr$ZoneWaitT10
+	 
+	
+	dt <- data.frame(	dt,
+						Ncar = tr$Ture10,
+						Ccar = Ccar,
+						Tcar = Tcar,
+						Npub = tr$Ture_kol10,
+						Cpub = Cpub,
+						Tpub = Tpub
+						)
+	
+	
+	# Remove NA's 
+	dt$Ncar[which(is.na(dt$Ncar))] <- 0
+	dt$Npub[which(is.na(dt$Npub))] <- 0
+	
+	index <- which(is.na(Cpub))
+	dt$Cpub[index] <- dt$Ccar[index]
+	index <- which(is.na(Tpub))
+	dt$Tpub[index] <- dt$Tcar[index]
+	
+	
+	n <- length(unique(dt$mun_from))
+	# Aggregate to municipality level and create matrices 
+	x <- aggregate(Ncar ~ mun_from + mun_to,FUN=sum,data=dt)
+	dt <- join(dt,x,by=c("mun_from","mun_to"))
+	names(dt)[ncol(dt)]<- "Ncar_ab"
+	head(x)
+
+	x <- aggregate(Npub ~ mun_from + mun_to,FUN=sum,data=dt)
+	dt <- join(dt,x,by=c("mun_from","mun_to"))
+	names(dt)[ncol(dt)]<- "Npub_ab"
+	head(x)
+	
+	
+	# Aggregate cost 
+	x <- data.frame(mun_from=dt$mun_from, mun_to= dt$mun_to, C = (dt$Ccar * dt$Ncar + dt$Cpub * dt$Npub)/(dt$Ncar_ab + dt$Npub_ab))
+	y <- aggregate(C ~ mun_from + mun_to,FUN=sum,data=x)
+	dt <- join(dt,y,by=c("mun_from","mun_to"))
+	names(dt)[ncol(dt)]<- "C_ab"
+	C <- matrix(y$C,n,n)
+	
+	
+	# Aggregate time
+	x <- data.frame(mun_from=dt$mun_from, mun_to= dt$mun_to, T = (dt$Tcar * dt$Ncar + dt$Tpub * dt$Npub)/(dt$Ncar_ab + dt$Npub_ab))
+	y <- aggregate(T ~ mun_from + mun_to,FUN=sum,data=x)
+	dt <- join(dt,y,by=c("mun_from","mun_to"))
+	names(dt)[ncol(dt)]<- "T_ab"
+	T <- matrix(y$T,n,n)
+	
+	
+	# Calculate differentials
+	load("commute_list")
+	load("house")
+	load("wage")
+	
+	# People need to go to work and back so T + t(T)
+	f <- colSums((t(T) + T ) * commute_list$condprob_work_res )
+	hat_f <- (f - mean(f))/mean(f)
+	
+	hat_p <- house$price_diff
+	
+	hat_w <- colSums(wage$wage_diff * commute_list$condprob_work_res)
+	
+	
+	# Calculate amenity index
+	s_w <- 0.833
+	s_c <- 0.143
+	s_y <- 0.315
+	bar_f <- 2*sum(commute_list$count_res_work * T)/sum(commute_list$count_res_work) / 60
+	bar_h <- 7.4
+	
+	pQ <- s_y * hat_p + (s_w * bar_f / bar_h + s_c) * hat_f - s_w * hat_w 
+	
+	
+	dk <- st_read("municipality_map.shp", stringsAsFactors = FALSE)
+	#pdf("Tranport_Blue.pdf",width=6,height=4,paper='special')
+	dk[,5] <- hat_f[dk$order]
+	names(dk)[5] <- "TransportCost"
+	map <- tm_shape(dk) + tm_polygons("TransportCost", midpoint = NA,palette="Blues",n=10)
+	map
+	#dev.off()
+	
+	#pdf("Tranport_Blue.pdf",width=6,height=4,paper='special')
+	dk[,5] <- hat_w[dk$order]
+	names(dk)[5] <- "Wages"
+	map <- tm_shape(dk) + tm_polygons("Wages", midpoint = NA,palette="Greens",n=10)
+	map
+	#dev.off()
+	
+	
+	#pdf("Tranport_Blue.pdf",width=6,height=4,paper='special')
+	dk[,5] <- hat_p[dk$order]
+	names(dk)[5] <- "HousePrices"
+	map <- tm_shape(dk) + tm_polygons("HousePrices", midpoint = NA,palette="YlOrRd",n=10)
+	map
+	#dev.off()
+	
+	#pdf("Tranport_Blue.pdf",width=6,height=4,paper='special')
+	dk[,5] <- pQ[dk$order]
+	names(dk)[5] <- "Amenities"
+	map <- tm_shape(dk) + tm_polygons("Amenities", midpoint = NA,palette="Reds",n=10)
+	map
+	#dev.off
+	
+	
+	

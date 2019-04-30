@@ -1,4 +1,3 @@
-
 # script to get municipalities
 library(osmdata)
 library(sf)
@@ -65,25 +64,22 @@ st_is_valid(b)
 # fix problem using code pointed out by user https://github.com/Nowosad
 b2 <- lwgeom::st_make_valid(b)
 
-map <- tm_shape(b2) + tm_polygons("var", midpoint = NA)
-map
+load("commute_list")
+index <- matchnames(commute_list$name,dk$name,maxdist=5)
+# Spot errors manually
+data.frame(dk$name[index$n],commute_list$name)
+# Correct errors
+	index$n[23] <- 86
+	index$n[28] <- 62
+	index$n[40] <- 68
+	index$n[93] <- 40
+	index$n[59] <- 28
+	index$n[56] <- 38
+data.frame(dk$name[index$n],commute_list$name)
+index2 <- matchnames(dk$name,dk$name[index$n],maxdist=5)
+b2$id <- commute_list$id[index2$n]
+b2$order <- index2$n
+dk <- b2[,c(1,2,5,6,3,4)]
 
+st_write(dk, "dk2.shp")
 
-
-
-matchnames <- function(x,y,maxdist=10)
-	{
-
-		R <- length(x)
-		temp <- list()
-		temp$old <- x
-		temp$new <- rep("",R)
-		temp$n <- rep(NA,R)
-		for (i in 1:R)
-		{
-			m <- amatch(x[i],y,maxDist=maxdist)
-			temp$new[i] <- y[m]
-			temp$n[i] <- m
-		}
-		return(temp)
-	}

@@ -2,7 +2,7 @@
 This is a collection of resources for spatial computation in R.
 
 # SP and SF packages
-A good place to begin is to build an understanding of the package sp and the package sf. Both introduce classes of objects and associated methods used for handling spatial data in R.
+A good place to begin is to build an understanding of the package sp and the package sf. Both introduce classes of objects and associated methods used for handling spatial data in R. These packages have standardized the use of spatial data in R. The sp and sf packages use different methodologies for integrating spatial data into R. The sp package introduced a coherent set of classes and methods for handling spatial data in 2005.
 
 ## Definition of Spatial data
 Let a data set be i=1,...,N observations on some attributes K attributes such that x = [x(i1),...,x(iK)]. In spatial data an extra feature

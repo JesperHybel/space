@@ -1,0 +1,44 @@
+
+##
+#
+# Some examples on how to load spatial data stored as a shape file into R
+#
+##
+
+
+# https://www.r-bloggers.com/r-and-gis-working-with-shapefiles/
+# install.packages("maptools")
+library(maptools)
+setwd("C://users//jeshyb//desktop//space//tutorial_1")
+crswgs84=CRS("+proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs")
+states=readShapePoly("statesp020.shp",
+proj4string=crswgs84,verbose=TRUE)
+
+# rgdal::readOGR or sf::st_read
+class(states)
+str(states@data)
+plot(states)
+
+
+crsmerc <- CRS("+proj=merc +a=6378137 +b=6378137 +lat_ts=0.0 +lon_0=0.0 +x_0=0.0 +y_0=0 +k=1.0 +units=m +nadgrids=@null +no_defs")
+states_transformed<-spTransform(states,CRS=crsmerc)
+
+
+library(rgeos)
+p <- SpatialPoints(list(lng,lat), proj4string=crswgs84)
+gContains(fdg,pt)
+
+
+# Opening shapefile in R?
+# https://gis.stackexchange.com/questions/19064/opening-shapefile-in-r
+# Use the shapefile directly. You can do this easily with the rgdal or sf packages, 
+# and read the shape in an object. For both packages you need to provide dsn - the data source, 
+# which in the case of a shapefile is the directory, and layer - 
+# which is the shapefile name, minus extension:
+
+# Read SHAPEFILE.shp from the current working directory (".")
+
+require(rgdal)
+mydir <- "C://users//jeshyb//desktop//space//tutorial_1"
+myfile <- "statesp020"
+shape <- readOGR(dsn = mydir, layer = myfile)

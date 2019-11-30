@@ -1,0 +1,51 @@
+# Import Seine river
+library(spData)
+data("seine")
+
+# Import one department
+library(maps)
+map("france", namesonly = TRUE, plot = FALSE) # get names of French departments
+sm <- map("france", regions = "Seine-Maritime", fill = FALSE, col = "black",
+          plot = FALSE)
+
+# Convert to sf objects
+library(sf)
+sm_sf <- st_as_sf(sm)
+seine_sf <- st_as_sf(seine)
+
+# Crop seine to Seine-Maritime department
+seine_int <- seine_sf %>%
+  st_transform(crs = st_crs(sm_sf)) %>% # same CRS
+  st_intersection(sm_sf) # crop
+
+# Draw grid
+sm_grid <- st_make_grid(sm_sf, cellsize = 0.05, what = "centers")
+# Crop the grid to Seine-Maritime department
+sm_grid_int <- st_intersection(sm_grid, sm_sf)
+# Compute distance to Seine river
+dist_seine <- st_distance(seine_int, sm_grid_int)
+# Conversion to dataframe
+dist_seine_df <- data.frame(dist_seine = as.vector(dist_seine)/1000,
+                            st_coordinates(sm_grid_int))
+
+# Plot
+library(ggplot2)
+library(cowplot)
+plot_grid(
+  ggplot(sm_sf) +
+    geom_sf(fill = "white") +
+    geom_sf(data = seine, color = "dodgerblue"),
+  ggplot(sm_sf) +
+    geom_sf(fill = "white") +
+    geom_sf(data = seine_int, color = "dodgerblue"),
+  ggplot(sm_grid_int) +
+    geom_sf(),
+  ggplot(dist_seine_df, aes(X, Y, fill = dist_seine)) +
+    geom_tile() +
+    geom_sf(data = sm_sf, inherit.aes = FALSE, fill = NA, size = 1) +
+    geom_sf(data = seine_int, inherit.aes = FALSE, color = "white") +
+    scale_fill_gradientn(colours = rev(brewer.pal(9, "Blues"))) +
+    labs(fill = "Distance to water (km)") +
+    theme_void() +
+    theme(legend.position = "bottom"),
+  nrow = 2, rel_widths = rep(1, 4), rel_heights = rep(1, 4), align = "vh")
